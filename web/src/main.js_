@@ -1,0 +1,354 @@
+/**
+ * [Config] 상수 설정
+ * 시스템에서 변경되지 않는 설정값들을 관리합니다.
+ */
+const SAMPLES_CONFIG = {
+    "C3": "C3.mp3", "Cs3": "Db3.mp3", "D3": "D3.mp3", "Ds3": "Eb3.mp3", "E3": "E3.mp3",
+    "F3": "F3.mp3", "Fs3": "Gb3.mp3", "G3": "G3.mp3", "Gs3": "Ab3.mp3", "A3": "A3.mp3", "As3": "Bb3.mp3", "B3": "B3.mp3",
+    "C4": "C4.mp3", "Cs4": "Db4.mp3", "D4": "D4.mp3", "Ds4": "Eb4.mp3", "E4": "E4.mp3",
+    "F4": "F4.mp3", "Fs4": "Gb4.mp3", "G4": "G4.mp3", "Gs4": "Ab4.mp3", "A4": "A4.mp3", "As4": "Bb4.mp3", "B4": "B4.mp3",
+    "C5": "C5.mp3", "Cs5": "Db5.mp3", "D5": "D5.mp3", "Ds5": "Eb5.mp3", "E5": "E5.mp3",
+    "F5": "F5.mp3", "Fs5": "Gb5.mp3", "G5": "G5.mp3", "Gs5": "Ab5.mp3", "A5": "A5.mp3", "As5": "Bb5.mp3", "B5": "B5.mp3"
+};
+
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const OCTAVES = [3, 4, 5];
+
+/**
+ * [State] 전역 상태 관리
+ */
+let VF = null;
+let audioCtx = null;
+const audioBuffers = {};
+let isAudioLoaded = false;
+let currentCorrectNote = ""; 
+let isAnswered = false;      
+let currentLevel = "1";      
+
+// DOM 캐싱 (성능 향상을 위해 전역 참조)
+const el = {
+    homeScreen: null, trainingScreen: null,
+    instruction: null, actionButtons: null,
+    output: null, levelSelect: null,
+    pianoContainer: null, pianoWrapper: null,
+    navContainer: null, navIndicator: null, navWrapper: null
+};
+
+/**
+ * [Layer 1] 초기화 및 엔진 로드
+ */
+
+// 라이브러리 연결 및 DOM 요소 캐싱
+function initialize() {
+    if (window.Vex && window.Vex.Flow) VF = window.Vex.Flow;
+    
+    el.homeScreen = document.getElementById('home-screen');
+    el.trainingScreen = document.getElementById('training-screen');
+    el.instruction = document.getElementById("quiz-instruction");
+    el.actionButtons = document.getElementById("action-buttons");
+    el.output = document.getElementById("output");
+    el.levelSelect = document.getElementById("level-select");
+    el.pianoContainer = document.getElementById("piano-container");
+    el.pianoWrapper = document.getElementById("piano-wrapper");
+    el.navContainer = document.getElementById('piano-navigator-container');
+    el.navIndicator = document.getElementById('navigator-indicator');
+    el.navWrapper = document.getElementById('piano-navigator-wrapper');
+
+    initStaticEventListeners();
+}
+
+// 오디오 샘플 프리로드 (DAO 패턴처럼 데이터 로드 전담)
+async function loadSamples() {
+    const entries = Object.entries(SAMPLES_CONFIG);
+    await Promise.all(entries.map(([name, file]) => {
+        return new Promise((resolve) => {
+            const audio = new Audio(`./samples/${file}`);
+            audio.preload = "auto";
+            audio.oncanplaythrough = () => { audioBuffers[name] = { audio }; resolve(); };
+            audio.onerror = () => resolve(); // 에러 시에도 진행
+        });
+    }));
+    isAudioLoaded = true;
+    console.log("🎹 Audio Samples Cached");
+}
+
+/**
+ * [Layer 2] 비즈니스 로직 (Service)
+ */
+
+// 사운드 재생 처리
+function playNote(fullNote) {
+    if (!isAudioLoaded) return;
+    const [name, oct] = fullNote.split("/");
+    const key = name.replace("#", "s") + oct;
+    const sample = audioBuffers[key];
+    if (sample) {
+        sample.audio.currentTime = 0;
+        sample.audio.play().catch(() => {});
+    }
+}
+
+// 문제 음원 재생
+function playQuestion() {
+    if (currentCorrectNote) playNote(currentCorrectNote);
+}
+
+// 랜덤 문제 생성 (Factory)
+function getRandomNote() {
+    let pool = (currentLevel === "1") ? ["C", "D", "E", "F", "G", "A", "B"] : NOTE_NAMES;
+    const name = pool[Math.floor(Math.random() * pool.length)];
+    const oct = (currentLevel === "3") ? OCTAVES[Math.floor(Math.random() * 3)] : 4;
+    return `${name}/${oct}`;
+}
+
+// 퀴즈 생성 및 초기화 (Controller)
+function generateQuiz(preventAutoPlay = false) {
+    if (!isAudioLoaded) return;
+    currentCorrectNote = getRandomNote();
+    isAnswered = false;
+    
+    el.instruction.innerHTML = "어떤 소리일까요? <br><small>(악보 클릭 시 다시 듣기)</small>";
+    renderActionButtons(false); // 초기 상태 버튼 렌더링
+    
+    drawStave("");
+    renderPianoKeyboard();
+    if (!preventAutoPlay) setTimeout(playQuestion, 600);
+}
+
+/**
+ * [Layer 3] UI 렌더링 (View)
+ */
+
+// 악보 그리기 (VexFlow 활용)
+function drawStave(userNote = "", isCorrect = null) {
+    if (!VF || !el.output) return;
+    el.output.innerHTML = "";
+    
+    const w = el.output.offsetWidth || 320;
+    const renderer = new VF.Renderer(el.output, VF.Renderer.Backends.SVG);
+    renderer.resize(w, 200);
+    const context = renderer.getContext();
+    const stave = new VF.Stave((w - 260) / 2, 40, 260).addClef("treble");
+    stave.setContext(context).draw();
+
+    if (userNote && currentCorrectNote) {
+        try {
+            const format = (n) => n.toLowerCase();
+            let notes = [];
+            const color = isCorrect ? "#28a745" : "#dc3545";
+            
+            const n = new VF.StaveNote({ keys: [format(userNote)], duration: "h" });
+            n.setStyle({ fillStyle: color, strokeStyle: color });
+            if (userNote.includes("#")) n.addModifier(new VF.Accidental("#"), 0);
+            
+            notes = isCorrect ? [
+                new VF.StaveNote({ keys: [format(currentCorrectNote)], duration: "h" }), n
+            ] : [n];
+
+            if (isCorrect && currentCorrectNote.includes("#")) notes[0].addModifier(new VF.Accidental("#"), 0);
+
+            const voice = new VF.Voice({ num_beats: notes.length * 2, beat_value: 4 }).addTickables(notes);
+            new VF.Formatter().joinVoices([voice]).format([voice], notes.length * 80);
+            voice.draw(context, stave);
+        } catch (e) { console.error(e); }
+    }
+}
+
+// 피아노 건반 및 하단 네비게이터 동시 생성
+function renderPianoKeyboard() {
+    // DOM 참조 확인 (el 객체 사용)
+    const container = el.pianoContainer;
+    const navContainer = el.navContainer;
+    const indicator = el.navIndicator;
+    const wrapper = el.pianoWrapper;
+    const navWrapper = el.navWrapper;
+
+    if (!container || !navContainer) return;
+
+    // 기존 내용 삭제 (중복 생성 방지)
+    container.innerHTML = ""; 
+    navContainer.innerHTML = "";
+
+    const octaves = [3, 4, 5];
+    const notes = [
+        { n: "C", t: "white" }, { n: "C#", t: "black" }, { n: "D", t: "white" }, { n: "D#", t: "black" },
+        { n: "E", t: "white" }, { n: "F", t: "white" }, { n: "F#", t: "black" }, { n: "G", t: "white" },
+        { n: "G#", t: "black" }, { n: "A", t: "white" }, { n: "A#", t: "black" }, { n: "B", t: "white" }
+    ];
+
+    const mainFragment = document.createDocumentFragment();
+    const navFragment = document.createDocumentFragment();
+
+    octaves.forEach(oct => {
+        notes.forEach(note => {
+            const full = `${note.n}/${oct}`;
+
+            // 1. 상단 큰 건반 생성
+            const key = document.createElement("div");
+            key.className = note.t === "white" ? "white-key" : "black-key";
+            
+            key.addEventListener("pointerdown", e => {
+                e.preventDefault();
+                playNote(full); // playNoteNative 대신 통합된 playNote 사용
+                key.classList.add("active");
+
+                if (!isAnswered && currentCorrectNote) {
+                    isAnswered = true;
+                    const isCorrect = (full === currentCorrectNote);
+                    drawStave(full, isCorrect);
+                    updateQuizResultUI(isCorrect);
+                }
+            });
+            key.addEventListener("pointerup", () => key.classList.remove("active"));
+            key.addEventListener("pointerleave", () => key.classList.remove("active"));
+            mainFragment.appendChild(key);
+
+            // 2. 하단 네비게이터 미니 건반 생성
+            const miniKey = document.createElement("div");
+            miniKey.className = note.t === "white" ? "nav-white" : "nav-black";
+            navFragment.appendChild(miniKey);
+        });
+    });
+
+    container.appendChild(mainFragment);
+    navContainer.appendChild(navFragment);
+
+    // 슬라이더 초기화 (이벤트 중복 방지를 위해 초기화 시 1회만 설정하거나 함수 내부에서 처리)
+    setupSlider(container, navContainer, indicator, wrapper, navWrapper);
+}
+
+// 슬라이더 핸들러 (이동 로직 통합)
+function setupSlider(container, navContainer, indicator, wrapper, navWrapper) {
+    let isDragging = false;
+
+    const moveIndicator = (clientX) => {
+        const navRect = navContainer.getBoundingClientRect();
+        const navWidth = navRect.width;
+        
+        // indicator의 너비도 정밀하게 가져옵니다.
+        const indicatorRect = indicator.getBoundingClientRect();
+        const indicatorWidth = indicatorRect.width;
+        
+        const maxLeft = navWidth - indicatorWidth;
+        
+        let x = clientX - navRect.left;
+        let leftPos = x - (indicatorWidth / 2);
+        
+        // ✅ [강력 보정] 자석 효과 범위를 3px로 살짝 늘려 확실히 밀착시킵니다.
+        if (leftPos < 3) leftPos = 0;
+        if (leftPos > maxLeft - 3) leftPos = maxLeft;
+        
+        leftPos = Math.max(0, Math.min(leftPos, maxLeft));
+        
+        // 퍼센트 단위 유지 (소수점 오차 방지)
+        const leftPercent = (leftPos / navWidth) * 100;
+        indicator.style.left = leftPercent + "%";
+        
+        // 실제 스크롤 이동 연동
+        const scrollRatio = maxLeft > 0 ? leftPos / maxLeft : 0;
+        
+        // container.scrollWidth 계산 시 오차를 줄이기 위해 Math.ceil 사용 고려
+        const maxScroll = container.scrollWidth - wrapper.clientWidth;
+        wrapper.scrollLeft = scrollRatio * maxScroll;
+    };
+    navWrapper.onpointerdown = (e) => {
+        isDragging = true;
+        navWrapper.setPointerCapture(e.pointerId);
+        moveIndicator(e.clientX);
+    };
+
+    window.onpointermove = (e) => {
+        if (isDragging) moveIndicator(e.clientX);
+    };
+
+    window.onpointerup = (e) => {
+        if (isDragging) {
+            navWrapper.releasePointerCapture(e.pointerId);
+            isDragging = false;
+        }
+    };
+}
+
+/**
+ * [Layer 4] Event & Controller
+ */
+
+// 정답/오답 결과에 따른 UI 업데이트
+function updateQuizResultUI(isCorrect) {
+    el.instruction.innerHTML = isCorrect ? 
+        "<span style='color:#28a745;font-weight:bold'>정답 🎉</span>" : 
+        "<span style='color:#dc3545;font-weight:bold'>오답 ❌</span>";
+    
+    // 문제를 풀었으므로(isFinished = true) 결과 버튼들을 렌더링합니다.
+    renderActionButtons(true);
+}
+
+// 버튼 영역 동적 생성 (이벤트 직접 바인딩)
+/**
+ * @param {boolean} isFinished - 문제를 풀었는지(정답/오답 클릭 후) 여부
+ */
+function renderActionButtons(isFinished = false) {
+    el.actionButtons.innerHTML = "";
+    
+    if (!isFinished) {
+        // 1. 문제를 풀기 전: 오직 [문제 다시 듣기] 버튼만 노출
+        const btnReplay = createBtn("문제 다시 듣기", "main-btn", playQuestion);
+        el.actionButtons.appendChild(btnReplay);
+    } else {
+        // 2. 정답 혹은 오답을 클릭한 후: [다시 풀기]와 [다음 문제] 노출
+        // '다시 풀기'는 현재 문제의 상태를 리셋하고 소리를 다시 들려줍니다.
+        const btnRetry = createBtn("다시 풀기", "main-btn", () => {
+            isAnswered = false; 
+            drawStave(""); // 악보 초기화
+            playQuestion(); // 소리 다시 재생
+            renderActionButtons(false); // 버튼을 다시 '다시 듣기' 상태로 변경
+            el.instruction.innerHTML = "어떤 소리일까요? <br><small>(악보 클릭 시 다시 듣기)</small>";
+        }, "#6c757d"); // 다시 풀기는 보조 버튼 색상
+
+        const btnNext = createBtn("다음 문제", "main-btn", () => {
+            generateQuiz(); // 새 문제 생성
+        });
+
+        el.actionButtons.appendChild(btnRetry);
+        el.actionButtons.appendChild(btnNext);
+    }
+}
+
+// 헬퍼: 버튼 생성 및 이벤트 바인딩
+function createBtn(text, cls, clickFn, bg = "") {
+    const b = document.createElement("button");
+    b.className = cls; b.innerText = text;
+    if (bg) b.style.backgroundColor = bg;
+    b.onclick = clickFn;
+    return b;
+}
+
+// 정적 요소 이벤트 바인딩 (HTML onclick 대체)
+function initStaticEventListeners() {
+    document.querySelector('.menu-card')?.addEventListener('click', () => {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        el.homeScreen.style.display = 'none';
+        el.trainingScreen.style.display = 'flex';
+        generateQuiz(false);
+    });
+
+    document.querySelector('.back-btn')?.addEventListener('click', () => {
+        el.homeScreen.style.display = 'flex';
+        el.trainingScreen.style.display = 'none';
+    });
+
+    el.levelSelect?.addEventListener('change', (e) => {
+        currentLevel = e.target.value;
+        generateQuiz(false);
+    });
+    
+    el.output.onclick = playQuestion;
+}
+
+/**
+ * [EntryPoint]
+ */
+window.onload = async () => {
+    initialize();
+    await loadSamples(); 
+};

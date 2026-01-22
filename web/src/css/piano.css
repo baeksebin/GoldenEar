@@ -1,0 +1,121 @@
+/* =========================================
+   4. PIANO (가로 스크롤 & 컨테이너)
+   ========================================= */
+#piano-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: #fff;
+    border-top: 1px solid #ccc;
+    /* 모바일 터치 최적화 */
+    touch-action: none !important;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#piano-container {
+    display: flex;
+    width: max-content; /* 건반이 옆으로 길게 늘어지는 핵심 */
+    padding: 10px 0;
+    transform: translateZ(0); /* 렌더링 가속 */
+}
+
+.white-key {
+    width: 60px;
+    height: 160px;
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+}
+
+.black-key {
+    width: 34px;
+    height: 100px;
+    flex-shrink: 0;
+    background: black;
+    margin-left: -17px; /* 흰 건반 사이에 걸치게 하는 마법의 수치 */
+    margin-right: -17px;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+/* 키를 눌렀을 때의 피드백 (원래 코드의 핵심) */
+.white-key.active {
+    background-color: #d1d1d1 !important;
+    transform: translateY(3px) scale(0.98);
+}
+
+.black-key.active {
+    background-color: #444 !important;
+    transform: translateY(2px) scale(0.98);
+}
+
+.white-key, .black-key {
+    touch-action: manipulation !important;
+    transition: background-color 0.05s, transform 0.05s;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+}
+
+/* =========================================
+   5. PIANO NAVIGATOR (하단 미니맵)
+   ========================================= */
+#piano-navigator-wrapper {
+    width: 100%;
+    background: #f0f0f0;
+    padding: 15px 0;
+    position: relative;
+    border-top: 1px solid #ddd;
+    touch-action: none;
+    min-height: 65px;
+}
+
+#piano-navigator-container {
+    display: flex;
+    width: 100%;
+    height: 35px;
+    background: white;
+    margin: 0 auto;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.nav-white {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    background: white;
+    border-right: 1px solid #eee;
+    box-sizing: border-box;
+}
+
+.nav-black {
+    width: 6px;
+    height: 60%;
+    background: #333;
+    margin-left: -3px;
+    margin-right: -3px;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+/* 보라색 인디케이터 (보라색 사각형) */
+#navigator-indicator {
+    position: absolute;
+    top: 0;
+    width: 33.333%; /* 3옥타브 중 1옥타브만 보여줌 */
+    height: 100%;
+    border: 2px solid #6200EE;
+    background: rgba(98, 0, 238, 0.15);
+    z-index: 10;
+    pointer-events: none;
+    box-sizing: border-box;
+    will-change: left; /* 애니메이션 성능 최적화 */
+}

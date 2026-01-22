@@ -1,0 +1,80 @@
+/* 기본 초기화 및 제스처 방지 */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    touch-action: none;
+    overscroll-behavior: none;
+    background-color: #f8f9fa;
+    font-family: 'Pretendard', sans-serif;
+}
+
+/* 메인 콘텐츠 영역 (하단 탭 바 높이 60px 제외) */
+#app {
+    width: 100%;
+    height: 100%; 
+    overflow-y: auto;
+    padding-bottom: 20px; /* 여유 공간 */
+}
+
+/* 상단바 스타일 */
+.top-bar {
+    width: 100%;
+    background: #6200EE;
+    padding: 45px 15px 15px; /* 노치 영역 고려 */
+    display: flex;
+    align-items: center;
+    color: white;
+    box-sizing: border-box;
+}
+
+.back-btn {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+/* 버튼 컨테이너 (정답 후 버튼 2개가 나란히 배치되도록) */
+#action-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* 버튼 사이 간격 */
+    margin: 15px 0;
+    width: 100%;
+}
+
+/* 공통 메인 버튼 스타일 */
+.main-btn {
+    flex: 1; /* 버튼들이 동일한 너비를 가지도록 설정 (선택 사항) */
+    max-width: 150px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    background-color: #6200EE; /* 테마 보라색 */
+    color: white;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 버튼 눌렀을 때 효과 */
+.main-btn:active {
+    transform: scale(0.95);
+    background-color: #3700B3;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* '다시 풀기' 같은 보조 버튼용 색상 (회색) */
+.main-btn[style*="background-color: rgb(108, 117, 125)"], 
+.main-btn[style*="background-color: #6c757d"] {
+    background-color: #6c757d !important;
+}

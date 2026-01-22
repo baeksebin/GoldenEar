@@ -1,0 +1,47 @@
+/* 대분류 카드 그리드 (홈 화면) */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 20px;
+    width: 90%;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.menu-card {
+    background: white;
+    border: 2px solid #6200EE;
+    border-radius: 16px;
+    padding: 30px 10px;
+    font-weight: bold;
+    color: #6200EE;
+    box-shadow: 0 4px 10px rgba(98, 0, 238, 0.1);
+    text-align: center;
+    transition: transform 0.1s;
+}
+
+/* 아코디언 스타일 (서브 카테고리) */
+.chapter-wrapper {
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    background: white;
+}
+
+.chapter-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chapter-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background: #fdfdfd;
+}
+
+.chapter-content.active {
+    max-height: 1000px; /* 열렸을 때 높이 */
+}

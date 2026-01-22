@@ -11,7 +11,7 @@ export default function HomeScreen() {
     : './web-dist/index.html';
 
   const baseUri = __DEV__ ? devUri : prodUri;
-  const uri = baseUri.includes('?') ? `${baseUri}&view=home` : `${baseUri}?view=home`;
+  const uri = baseUri.includes('?') ? `${baseUri}&view=training` : `${baseUri}?view=training`;
   
   // const uri = prodUri; // apk 내장 배포
   console.log("PROD_URL 최종값:", uri);

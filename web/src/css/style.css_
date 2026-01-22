@@ -1,0 +1,264 @@
+/* =========================================
+   1. COMMON (기본 레이아웃)
+   ========================================= */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+
+    /* 제스처 제어 */
+    touch-action: none;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: none;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f8f9fa;
+    font-family: 'Pretendard', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#training-screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#output {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: white;
+    padding: 20px 0;
+    background-color: #f8f9fa;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    margin: 10px auto;
+}
+
+input, textarea, select {
+    font-size: 16px;
+}
+
+/* =========================================
+   2. HOME SCREEN (메인 메뉴 카드)
+   ========================================= */
+#home-screen {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    width: 90%;
+    max-width: 450px;
+}
+
+.menu-card {
+    background: white;
+    border: 2px solid #6200EE;
+    border-radius: 16px;
+    padding: 30px 10px;
+    font-weight: bold;
+    color: #6200EE;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(98, 0, 238, 0.1);
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    min-width: fit-content;
+}
+
+.menu-card:active {
+    transform: scale(0.96);
+    background-color: #f3e5f5;
+}
+
+/* =========================================
+   3. UI COMPONENTS (상단바 & 버튼)
+   ========================================= */
+.top-bar {
+    width: 100%;
+    background: #6200EE;
+    padding: 40px 15px 15px;
+    display: flex;
+    align-items: center;
+    color: white;
+    box-sizing: border-box;
+}
+
+.back-btn {
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+#action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    height: 60px;
+    min-height: 60px;
+    align-items: center;
+}
+
+.main-btn {
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #6200EE;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   4. PIANO (가로 스크롤 & 컨테이너)
+   ========================================= */
+#piano-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: #fff;
+    border-top: 1px solid #ccc;
+    touch-action: none !important;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#piano-container {
+    display: flex;
+    width: max-content;
+    padding: 10px 0;
+    transform: translateZ(0);
+}
+
+.white-key {
+    width: 60px;
+    height: 160px;
+    flex-shrink: 0;
+    background: white;
+    border: 1px solid #000;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+}
+
+.black-key {
+    width: 34px;
+    height: 100px;
+    flex-shrink: 0;
+    background: black;
+    margin-left: -17px;
+    margin-right: -17px;
+    z-index: 2;
+    box-sizing: border-box;
+}
+
+.white-key.active {
+    background-color: #d1d1d1 !important;
+    transform: translateY(3px) scale(0.98);
+}
+
+.black-key.active {
+    background-color: #444 !important;
+    transform: translateY(2px) scale(0.98);
+}
+
+.white-key, .black-key {
+    touch-action: manipulation !important;
+    transition: background-color 0.05s, transform 0.05s;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    -webkit-user-select: none !important;
+}
+
+/* =========================================
+   5. PIANO NAVIGATOR (하단 미니맵)
+   ========================================= */
+#piano-navigator-wrapper {
+    width: 100%;
+    background: #f0f0f0;
+    padding: 15px 0;
+    position: relative;
+    border-top: 1px solid #ddd;
+    touch-action: none;
+    min-height: 65px;
+    display: block !important;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+}
+
+#piano-navigator-container {
+    display: flex;
+    width: 100%;
+    height: 35px;
+    background: white;
+    margin: 0 auto;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.nav-white {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    background: white;
+    border-right: 1px solid #eee;
+    box-sizing: border-box;
+}
+
+.nav-white:last-child {
+    border-right: none;
+}
+
+.nav-black {
+    width: 6px;
+    height: 60%;
+    background: #333;
+    margin-left: -3px;
+    margin-right: -3px;
+    z-index: 2;
+    flex-shrink: 0;
+}
+
+#navigator-indicator {
+    position: absolute;
+    top: 0;
+    width: 33.333%;
+    height: 100%;
+    border: 2px solid #6200EE;
+    background: rgba(98, 0, 238, 0.15);
+    z-index: 10;
+    pointer-events: none;
+    box-sizing: border-box;
+    left: 0;
+    will-change: left;
+}

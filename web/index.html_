@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover, shrink-to-fit=no">
+    <title>GoldenEar</title>
+    <link rel="stylesheet" href="./src/css/style.css">
+    <script src="./js/vexflow.js"></script>
+</head>
+<body>
+
+<div id="home-screen">
+    <div class="nav-menu-home">
+        <div class="grid-container">
+            <button id="btn-interval" class="menu-card">청음 훈련</button>
+        </div>
+    </div>
+</div>
+
+<div id="training-screen" style="display:none;">
+    <div class="top-bar">
+        <button id="btn-back" class="back-btn">◀ 뒤로</button>
+        <span id="current-title">훈련</span>
+        
+        <select id="level-select" style="margin-left: auto; padding: 5px; border-radius: 5px;">
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+        </select>
+    </div>
+
+    <p id="quiz-instruction" style="text-align: center; margin: 15px 0; font-weight: bold; color: #555;">
+        소리를 듣고 정답을 맞혀보세요.
+    </p>
+
+    <div id="output"></div>
+
+    <div id="action-buttons" class="button-container" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;">
+    </div>
+
+    <div id="piano-wrapper">
+        <div id="piano-container"></div>
+    </div>
+
+    <div id="piano-navigator-wrapper" draggable="false">
+        <div id="piano-navigator-container" draggable="false"></div>
+        <div id="navigator-indicator" draggable="false"></div>
+    </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+
+</body>
+</html>
